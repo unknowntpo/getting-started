@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todos-mysql
+  labels:
+    app: todos
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: todos
+    # Q: Why do we need tier ?
+    tier: todos
+    # Q: what  about this ?
+  clusterIP: None
+---
+apiVersion: v1
+# Q: Where do we define PersistentVolume ?
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  labels:
+    app: todos
+spec:
+  accessModes:
+    # Q: What if we use ReadWriteMany?
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todos-mysql
+  labels:
+    app: todos
+spec:
+  selector:
+    matchLabels:
+      app: todos
+      tier: mysql
+  strategy:
+    # Q: What does strategy recreate means ?
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: todos
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim

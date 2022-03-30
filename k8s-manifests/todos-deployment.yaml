@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todos
+  labels:
+    app: todos
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: todos
+    tier: frontend
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: todos-pv-claim
+  labels:
+    app: todos
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todos
+  labels:
+    app: todos
+spec:
+  selector:
+    matchLabels:
+      app: todos
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: todos
+        tier: frontend
+    spec:
+      containers:
+      - image: todos:4.8-apache
+        name: todos
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: todos-mysql
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 80
+          name: todos
+        volumeMounts:
+        - name: todos-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: todos-persistent-storage
+        persistentVolumeClaim:
+          claimName: todos-pv-claim
