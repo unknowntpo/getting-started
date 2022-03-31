@@ -45,22 +45,26 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: todos:4.8-apache
+      - image: node:12-alpine
         name: todos
         env:
-        - name: WORDPRESS_DB_HOST
-          value: todos-mysql
-        - name: WORDPRESS_DB_PASSWORD
+        - name: MYSQL_HOST
+          value:  mysql
+        - name: MYSQL_USER
+          value:  root
+        - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-pass
-              key: password
+              name:  mysql-pass
+              key: secret
+        - name: MYSQL_DB
+          value:  todos
         ports:
         - containerPort: 80
           name: todos
         volumeMounts:
         - name: todos-persistent-storage
-          mountPath: /var/www/html
+          mountPath: /app
       volumes:
       - name: todos-persistent-storage
         persistentVolumeClaim:
