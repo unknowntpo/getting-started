@@ -1,3 +1,4 @@
+namespace: todos-namespace
 secretGenerator:
 - name: mysql-pass
   literals:
