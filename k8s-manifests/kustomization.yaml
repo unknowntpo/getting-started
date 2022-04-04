@@ -2,7 +2,7 @@ namespace: todos-namespace
 secretGenerator:
 - name: mysql-pass
   literals:
-  - secret=secret
+  - secret=password
 resources:
   - mysql-deployment.yaml
   - todos-deployment.yaml
